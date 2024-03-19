@@ -1,0 +1,3 @@
+CLR A
+DEC A
+DEC R7
