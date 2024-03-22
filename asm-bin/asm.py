@@ -1,6 +1,3 @@
-import re
-import sys
-
 INSTRUCTIONS = {
     "NOP": 0x00,
     "CLR": 0xE4,
@@ -132,6 +129,7 @@ INSTRUCTIONS = {
         "A,R5": 0x5D,
         "A,R6": 0x5E,
         "A,R7": 0x5F,
+        "C,bit_addr": 0x82,
     },
     "JZ": {
         "code_addr": 0x60,
@@ -168,79 +166,39 @@ INSTRUCTIONS = {
         "R5,#data": 0x7D,
         "R6,#data": 0x7E,
         "R7,#data": 0x7F,
+        "bit_addr,C": 0x92,
+        "@DPTR,A": 0xE0,
+        "A,@DPTR": 0xE6,
     },
     "SJMP": {
         "code_addr": 0x80,
     },
-    "ANL": {
-        "C,bit_addr": 0x82,
-    },
-    "MOV": {
-        "bit_addr,C": 0x92,
-    },
-    "MOV": {
-        "@DPTR,A": 0xE0,
-    },
-    "MOV": {
-        "A,@DPTR": 0xE6,
-    },
-    "MOVX": {
-        "A,@R0": 0xE2,
-        "A,@R1": 0xE3,
-        "@DPTR,A": 0xF0,
-        "@R0,A": 0xF2,
-        "@R1,A": 0xF3,
-    },
-    "MOVC": {
-        "A,@A+PC": 0x93,
-        "A,@A+DPTR": 0x93,
-    },
 }
 
-INSTRUCTION_REGEX = re.compile(r"^\s*([a-zA-Z0-9]+)\s+(.*)$")
 
-def dec_to_hex(value):
-    return hex(value)[2:].zfill(2)
+def open_file(file):
+    with open(file=file, mode='r') as lines:
+        commands = list(map(lambda x: x.rstrip().replace(',', '').split(" "), lines.readlines()))
+    return commands
 
-def parse_line(line):
-    match = INSTRUCTION_REGEX.match(line)
-    if match:
-        return match.group(1), match.group(2)
-    return None, None
 
-def generate_opcode(instruction, operands):
-    opcode_info = INSTRUCTIONS.get(instruction)
-    if opcode_info:
-        if isinstance(opcode_info, dict):
-            operand_key = ','.join(operands.split(',')) if operands else None
-            opcode = opcode_info.get(operand_key)
-            if opcode is None:
-                raise ValueError(f"Unsupported operands for {instruction}: {operands}")
-        else:
-            opcode = opcode_info
-        return dec_to_hex(opcode)
-    else:
-        raise ValueError(f"Unknown instruction: {instruction}")
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python asm.py <filename>")
-        sys.exit(1)
-
-    filename = sys.argv[1]
+def asm_to_bin(command):
     result = []
+    opcode_info = INSTRUCTIONS.get(command[0])
     try:
-        with open(filename, 'r') as file:
-            assembly_code = file.readlines()
-        for line in assembly_code:
-            instruction, operands = parse_line(line.strip())
-            if instruction:
-                opcode = generate_opcode(instruction, operands)
-                result.append(opcode.upper())
-                # print(f"{opcode}")
-            else:
-                print("Invalid line:", line.strip())
-        print(''.join(result))
-    except FileNotFoundError:
-        print(f"File {filename} not found.")
-        sys.exit(1)
+        if type(opcode_info) is int:
+            result.append(hex(opcode_info)[2:].upper())
+        elif len(command) == 2:
+            result.append(hex(opcode_info[command[1]])[2:].upper())
+        elif len(command) == 3:
+            key = command[1] + "," + command[2]
+            result.append(hex(opcode_info[key])[2:].upper())
+    except ValueError:
+        print(f'invalid command input')
+    return result
+
+
+otvet = []
+for i in open_file('program1.asm'):
+    otvet.append(*asm_to_bin(i))
+print(''.join(otvet))
