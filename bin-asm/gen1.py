@@ -15,6 +15,10 @@ def main():
         print(f"{i:02X}",end="")
         print(f"{i:02X}",end="")
         print(f"{i:02X}",end="")
+
+        print(f"{i:02X}",end="")
+        print(f"{i:02X}",end="")
+        print(f"{i:02X}",end="")
         #print()
     pass
 
