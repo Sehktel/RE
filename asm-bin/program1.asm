@@ -1,3 +1,3 @@
-CLR A
-DEC A
-DEC R7
+MOV A #data
+ADDC A
+ORL A R3
