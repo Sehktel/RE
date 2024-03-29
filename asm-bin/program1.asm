@@ -1,3 +1,5 @@
-MOV A #data
-ADDC A
-ORL A R3
+CLR
+DEC A
+DEC R6
+INC 011h
+ORL A, #F56h
