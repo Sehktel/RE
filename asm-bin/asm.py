@@ -1,3 +1,5 @@
+import re
+
 INSTRUCTIONS = {
     "NOP": 0x00,
     "CLR": 0xE4,
@@ -176,6 +178,23 @@ INSTRUCTIONS = {
 }
 
 
+def check(info):
+    list_1 = ['A', '@R0', '@R1', 'R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'C', '@DPTR']
+    regex_1 = r'^#([0-9A-Fa-f])+h'
+    regex_2 = r'^([0-9A-Fa-f])+h'
+    regex_3 = r'^([0-9A-Fa-f])+$'
+    if info in list_1:
+        return info
+    elif re.findall(regex_1, info):
+        return "#data"
+    elif re.findall(regex_2, info):
+        return "data_addr"
+    elif re.findall(regex_3, info):
+        return "code_addr"
+    else:
+        return "bit_addr"
+
+
 def open_file(file):
     with open(file=file, mode='r') as lines:
         commands = list(map(lambda x: x.rstrip().replace(',', '').split(" "), lines.readlines()))
@@ -189,10 +208,12 @@ def asm_to_bin(command):
         if type(opcode_info) is int:
             result.append(hex(opcode_info)[2:].upper())
         elif len(command) == 2:
-            result.append(hex(opcode_info[command[1]])[2:].upper())
-        elif len(command) == 3:
-            key = command[1] + "," + command[2]
+            key = check(command[1])
             result.append(hex(opcode_info[key])[2:].upper())
+        elif len(command) == 3:
+            key1 = check(command[1])
+            key2 = check(command[2])
+            result.append(hex(opcode_info[f'{key1},{key2}'])[2:].upper())
     except ValueError:
         print(f'invalid command input')
     return result
